@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>부가기능 2: 네이버 키워드 검색량 조회</h2>
+    <hr>
+    <p class="text-muted"><small>네이버 검색광고 API를 사용하여 월간 검색량(PC, 모바일)을 조회합니다.</small></p>
+
+    <form method="POST" action="{{ url_for('feature2_search_volume') }}" class="mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md">
+                <label for="keyword" class="form-label">검색 키워드:</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" required placeholder="예: 캠핑" value="{{ keyword if keyword }}">
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-primary">검색량 조회</button>
+            </div>
+        </div>
+    </form>
+
+    {% if result_data %}
+        <div class="alert alert-success" role="alert">
+            <h5 class="alert-heading">검색량 결과: {{ result_data.keyword }}</h5>
+            <p>월간 PC 검색량: {{ result_data.monthlyPcQcCnt if result_data.monthlyPcQcCnt is not none else 'N/A' }}</p>
+            <p>월간 모바일 검색량: {{ result_data.monthlyMobileQcCnt if result_data.monthlyMobileQcCnt is not none else 'N/A' }}</p>
+            <hr>
+            <p class="mb-0">월간 총 검색량: {{ result_data.monthlyTotalQcCnt if result_data.monthlyTotalQcCnt is not none else 'N/A' }}</p>
+        </div>
+    {% elif error_message %}
+         <div class="alert alert-danger" role="alert">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

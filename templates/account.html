@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+
+        <h2 class="mb-3">계정 정보</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">사용자: {{ user_info.user_id }}</h5> {# Use user_info #}
+                <p class="card-text"><strong>이메일:</strong> {{ session['email'] }}</p> {# Email still comes from session #}
+                {% if user_info.is_admin %} {# Use user_info #}
+                    <p class="card-text"><strong>포인트:</strong> {{ user_info.current_points }}</p> {# Use user_info #}
+                    <p class="card-text"><strong>구독 상태:</strong> {{ user_info.subscription_status }}</p> {# Use user_info #}
+                {% else %}
+                    <p class="card-text"><strong>보유 포인트:</strong> {{ user_info.current_points | default(0) }} P {# Use user_info #}
+                        <a href="{{ url_for('charge_points') }}" class="btn btn-sm btn-outline-primary ms-2">포인트 충전</a>
+                    </p>
+                    <p class="card-text">
+                        <strong>구독 상태:</strong>
+                        {% if user_info.subscription_status == 'active' %} {# Use user_info #}
+                            <span class="badge bg-success">활성</span>
+                            {# 만료일 표시는 context processor에서 제공하지 않으므로 제거 또는 별도 로직 필요 #}
+                            {# <a href="#" class="btn btn-sm btn-outline-secondary ms-2">구독 관리</a> #} {# 구독 관리 링크 예시 #}
+                        {% else %}
+                            <span class="badge bg-secondary">비활성</span>
+                            <a href="{{ url_for('subscribe') }}" class="btn btn-sm btn-success ms-2">구독하기</a>
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <h2 class="mb-4">{{ session['user_id'] }}님의 요청 기록</h2>
+        {# --- 관리자 전용 다운로드 버튼 추가 --- #}
+        {% if session['is_admin'] %}
+        <div class="mb-3">
+            <a href="{{ url_for('download_today_requests') }}" class="btn btn-success">
+                <i class="bi bi-download"></i> 오늘 요청 CSV 다운로드
+            </a>
+        </div>
+        {% endif %}
+        {# --- 다운로드 버튼 끝 --- #}
+
+
+        {% if requests %}
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>이름</th>
+                        <th>키워드</th> {# New Keyword Header #}
+                        <th>상품 목록</th>
+                        <th>서비스 목록</th>
+                        <th>트래픽 수량</th>
+                        <th>전송 시간</th>
+                        <th>상태</th>
+                        <th>링크</th> {# Link header visible to all #}
+                        {% if session['is_admin'] %}
+                            <th>사용자 ID</th>
+                            <th>완료</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                        <tr>
+                            <td>{{ request['name'] }}</td>
+                            <td>{{ request['keyword'] | default('N/A', true) }}</td> {# New Keyword Cell #}
+                            <td>
+                                {% if request['merchandise'] == 1 %}
+                                    네이버 플레이스
+                                {% else %}
+                                    해당 없음
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if request['service'] == 1 %}
+                                    저장하기
+                                {% elif request['service'] == 2 %}
+                                    트래픽
+                                {% else %}
+                                    알 수 없음
+                                {% endif %}
+                            </td>
+                            <td>{{ request['traffic_amount'] if request['traffic_amount'] is not none else '' }}</td> {# Display traffic amount only if it exists #}
+                            <td>{{ request['sub_time'] }}</td>
+
+                            <td>
+                                <span class="text">{{request['state']}}</span>
+                                {% if request['state']=='대기중'%}
+                                <form action="{{ url_for('cancel_request', sub_time=request['sub_time']) }}" method="POST">
+                                    <button type="submit" class="btn btn-warning btn-sm">취소하기</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                            <td> {# Link cell visible to all #}
+                                {% if request['link'] %}
+                                    {# Display the actual URL as the link text #}
+                                    <a href="{{ request['link'] }}" target="_blank" rel="noopener noreferrer">{{ request['link'] }}</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            {% if session['is_admin'] %}
+                            <td>{{ request['user_id'] }}</td>
+                            <td>
+                                {% if request['state'] == '대기중' %}
+                                    <!-- 완료하기 버튼 -->
+                                    <form action="{{ url_for('complete_request', sub_time=request['sub_time']) }}" method="POST">
+                                        <button type="submit" class="btn btn-primary btn-sm">완료하기</button>
+                                    </form>
+                                    {% else %}
+                                    <!-- 완료됨 혹은 취소됨 텍스트 -->
+                                    <span class="text">{{request['state']}}</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>전송된 요청 기록이 없습니다.</p>
+        {% endif %}
+        
+        <div class="mt-4">
+            <!-- 이메일 표시 -->
+            <p><strong>등록된 이메일:</strong> {{ session['email'] }}</p>
+            <!-- 비밀번호 변경 버튼 -->
+            <form method="POST">
+                <button type="submit" name="reset_password" class="btn btn-warning mt-2">비밀번호 변경하기</button>
+            </form>
+
+            <!-- 계정 탈퇴 버튼 -->
+            <form action="{{ url_for('delete_account') }}" method="POST" onsubmit="return confirm('정말로 계정을 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.');" class="mt-3">
+                <button type="submit" class="btn btn-danger">계정 탈퇴</button>
+            </form>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message | e }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+        
+        <a href="{{ url_for('home') }}" class="btn btn-secondary mt-3">홈으로 돌아가기</a>
+    </div>
+{% endblock %}

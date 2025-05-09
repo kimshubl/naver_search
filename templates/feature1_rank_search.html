@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>부가기능 1: 네이버 지도 순위 검색</h2>
+    <hr>
+
+    <form method="POST" action="{{ url_for('feature1_rank_search') }}" class="mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md">
+                <label for="keyword" class="form-label">검색 키워드:</label>
+                 <input type="text" class="form-control" id="keyword" name="keyword" required placeholder="예: 강남역 맛집" value="{{ keyword if keyword }}">
+             </div>
+             <div class="col-md">
+                 <label for="site_url" class="form-label">사이트 주소 (Naver Place):</label>
+                 <input type="url" class="form-control" id="site_url" name="site_url" required placeholder="https://m.place.naver.com/..." value="{{ site_url if site_url }}">
+             </div>
+             <div class="col-md-auto">
+                <button type="submit" class="btn btn-primary">순위 검색</button>
+            </div>
+        </div>
+    </form>
+
+    {% if result_message %}
+        <div class="alert {% if '오류' in result_message or '없습니다' in result_message %}alert-warning{% else %}alert-success{% endif %}" role="alert">
+            {{ result_message }}
+        </div>
+    {% endif %}
+
+    {# Optional: Display the top 100 list if needed for debugging or context #}
+    {#
+    {% if places_list %}
+        <h5>검색 결과 (상위 {{ places_list|length }}개):</h5>
+        <ul class="list-group list-group-flush">
+            {% for place in places_list %}
+                <li class="list-group-item">{{ place.rank }}. {{ place.name }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    #}
+
+</div>
+{% endblock %}

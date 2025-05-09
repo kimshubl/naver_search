@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h1 class="mb-3">환영합니다! Flask 기본 웹사이트입니다.</h1>
+        <p>Flask를 사용하여 웹사이트를 만들어 보세요!</p>
+
+        <form method="POST" class="mt-4">
+            <div class="mb-3">
+                <label for="name" class="form-label">이름</label>
+                 <input type="text" name="name" class="form-control" placeholder="Enter name" value=" {{session['user_id']}} " required>
+             </div>
+
+             <div class="mb-3">
+                 <label for="keyword" class="form-label">키워드</label>
+                 <input type="text" name="keyword" id="keyword" class="form-control" placeholder="요청 관련 키워드 입력" required>
+             </div>
+
+             <div class="mb-3">
+                <label class="form-label">상품 목록</label><br>
+                <input type="checkbox" name="merchandise" value="네이버 플레이스"> 네이버 플레이스
+            </div>
+        
+    
+            <div class="mb-3">
+                <label for="service" class="form-label">서비스 목록</label>
+                <select name="service" id="service" class="form-select">
+                    <option value="저장하기">저장하기</option>
+                    <option value="트래픽">트래픽</option>
+                </select>
+            </div>
+
+            <!-- 수량 입력창 (기본은 숨김) -->
+            <div class="mb-3" id="traffic-amount-group" style="display: none;">
+                <label for="traffic_amount" class="form-label">트래픽 수량</label>
+                <input type="number" name="traffic_amount" id="traffic_amount" class="form-control" min="1" placeholder="수량 입력">
+            </div>
+
+            <!-- 링크 입력 필드 추가 -->
+            <div class="mb-3">
+                <label for="link" class="form-label">관련 링크 (선택 사항)</label>
+                <input type="url" name="link" id="link" class="form-control" placeholder="https://example.com">
+            </div>
+    
+            <button type="submit" class="btn btn-primary">제출</button>
+        </form>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message | e }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- JavaScript로 동적 표시 -->
+    <script>
+        const serviceSelect = document.getElementById("service");
+        const trafficGroup = document.getElementById("traffic-amount-group");
+
+        serviceSelect.addEventListener("change", function () {
+            if (this.value === "트래픽") {
+                trafficGroup.style.display = "block";
+            } else {
+                trafficGroup.style.display = "none";
+            }
+        });
+
+        // 페이지 로딩 시에도 상태 체크
+        window.addEventListener("DOMContentLoaded", function () {
+            if (serviceSelect.value === "트래픽") {
+                trafficGroup.style.display = "block";
+            }
+        });
+    </script>
+{% endblock %}

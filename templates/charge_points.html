@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ payment_data.orderName }}</h2>
+    <p>{{ payment_data.amount | int }}원에 {{ config.POINT_PACKAGE_AMOUNT }} 포인트를 충전합니다.</p>
+
+    <!-- 결제 위젯을 표시할 영역 -->
+    <div id="payment-widget" style="width: 100%;"></div>
+    <!-- 결제 금액을 저장할 숨겨진 요소 -->
+    <span id="payment-data" data-amount="{{ payment_data.amount }}" style="display: none;"></span>
+
+    <!-- 결제창을 호출하는 스크립트 -->
+    <!-- 1. Toss Payments 결제 위젯 SDK 추가 -->
+    <script src="https://js.tosspayments.com/v1/payment-widget"></script>
+    <script>
+        const clientKey = "{{ client_key }}"; // 서버에서 전달받은 클라이언트 키
+        const paymentWidget = PaymentWidget(clientKey, PaymentWidget.ANONYMOUS);
+
+        // HTML data-* 속성에서 결제 금액 읽기
+        const paymentDataElement = document.getElementById('payment-data');
+        const paymentAmount = parseInt(paymentDataElement.dataset.amount, 10);
+
+        // 2. 결제 위젯 렌더링
+        paymentWidget.renderPaymentMethods(
+            "#payment-widget",
+            { value: paymentAmount }, // JS 변수를 객체에 담아 전달
+            { variantKey: "DEFAULT" }
+        );
+
+        // 3. 위젯의 결제 버튼 렌더링
+        paymentWidget.renderPaymentButton("#payment-button", paymentAmount);
+
+        // 4. requestPayment 함수 제거 (위젯 버튼이 자체 처리)
+
+    </script>
+
+    <!-- 위젯의 결제 버튼이 렌더링될 영역 -->
+    <div id="payment-button" class="mt-3"></div>
+    <a href="{{ url_for('account') }}" class="btn btn-secondary mt-3">취소</a>
+
+</div>
+{% endblock %}

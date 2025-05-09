@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">결제 실패</h4>
+        <p>결제 처리 중 오류가 발생했습니다.</p>
+        <hr>
+        <p class="mb-1"><strong>오류 메시지:</strong> {{ message | default('알 수 없는 오류', true) }}</p>
+        {% if code %}
+        <p class="mb-0"><strong>오류 코드:</strong> {{ code }}</p>
+        {% endif %}
+    </div>
+    <p>문제가 지속되면 고객센터로 문의해주세요.</p>
+    <a href="{{ url_for('home') }}" class="btn btn-secondary">홈으로 돌아가기</a>
+    {# 실패한 결제 종류에 따라 다른 페이지로 안내 가능 #}
+    {# 예: <a href="{{ url_for('subscribe') }}" class="btn btn-warning">다시 시도</a> #}
+</div>
+{% endblock %}

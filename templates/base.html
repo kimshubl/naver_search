@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <!-- 부트스트랩 CSS 링크 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 부트스트랩 아이콘 CSS 링크 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    {% block head_extra %}{% endblock %}
+    <style>
+        /* 슬라이드 패널 스타일 및 애니메이션 */
+        #extra-features-panel {
+            background-color: #e9ecef; /* 약간 어두운 배경 */
+            /* Padding removed from outer panel */
+            border-bottom: 1px solid #dee2e6;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out; /* 부드러운 슬라이드 효과 */
+            /* Position absolute to appear below navbar */
+            position: absolute;
+            top: 100%; /* Position below the navbar */
+            left: 0;
+            right: 0;
+            z-index: 1050; /* Ensure it's above other content */
+            color: #212529; /* Dark text color for readability */
+        }
+        #extra-features-panel.show {
+            max-height: 500px; /* Increase max-height to ensure content fits */
+        }
+        /* Inner div for padding */
+        .extra-features-panel-content {
+            padding: 15px;
+        }
+        /* Adjust main content padding when panel is shown */
+        body.panel-shown .container.mt-4 {
+             padding-top: 70px; /* Adjust as needed based on panel height */
+             transition: padding-top 0.3s ease-out;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 상단바 (NavBar) -->
+    <!-- base.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark position-relative">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('home') }}">My Website</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                {% if 'user_id' in session %}
+                    <!-- 로그인 시 표시되는 항목들 -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('account') }}">
+                            <i class="bi bi-person-circle"></i> {{ user_info.user_id }}
+                            <!-- ... (뱃지 표시 등) ... -->
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> 로그아웃</a>
+                    </li>
+                    <!-- !!! 토글 버튼을 여기로 이동 !!! -->
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-outline-secondary ms-2" id="extra-features-toggle" title="부가 기능">
+                            <i class="bi bi-list"></i> <!-- 햄버거 아이콘 -->
+                        </button>
+                    </li>
+                {% else %}
+                    <!-- 로그아웃 시 표시되는 항목 (예: 로그인/회원가입 버튼 - 현재 코드엔 없음) -->
+                    <!-- <li class="nav-item"> <a class="nav-link" href="{{ url_for('login') }}">로그인</a> </li> -->
+                    <!-- <li class="nav-item"> <a class="nav-link" href="{{ url_for('register') }}">회원가입</a> </li> -->
+                {% endif %}
+            </ul>
+            {% if 'user_id' in session %}
+             <!-- 추가 기능 슬라이드 패널 (로그인 시에만 렌더링) -->
+             <div id="extra-features-panel">
+                 <div class="extra-features-panel-content">
+                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-3">
+                          <a href="{{ url_for('feature1_rank_search') }}" class="btn btn-outline-primary btn-sm">지도 순위 검색</a>
+                          <a href="{{ url_for('feature2_search_volume') }}" class="btn btn-outline-info btn-sm">키워드 검색량</a>
+                          <a href="{{ url_for('manage_targets') }}" class="btn btn-outline-success btn-sm">순위 추적 관리</a>
+                      </div>
+                      <hr>
+                 </div>
+             </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+    <!-- 페이지 콘텐츠 -->
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block scripts %}
+    {% endblock %}
+    <!-- 부트스트랩 JS 링크 -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <!-- 추가 기능 패널 토글 스크립트 -->
+    <script>
+        const toggleButton = document.getElementById('extra-features-toggle');
+        const panel = document.getElementById('extra-features-panel');
+        const body = document.body; // Get body element
+        // 부가 기능 버튼 및 내용 영역 변수 삭제
+
+        console.log("base script");
+
+        // 부가 기능 패널 토글 로직
+        if (toggleButton && panel) {
+            let isAnimating = false;
+
+            toggleButton.addEventListener('click', () => {
+                if (isAnimating) return; // 애니메이션 중이면 클릭 무시
+
+                isAnimating = true; // 애니메이션 시작
+                toggleButton.disabled = true; // 버튼 비활성화
+
+                panel.classList.toggle('show');
+                body.classList.toggle('panel-shown'); // Toggle class on body
+
+                // 애니메이션 시간(300ms) 후 버튼 활성화 및 플래그 리셋
+                setTimeout(() => {
+                    toggleButton.disabled = false;
+                    isAnimating = false;
+                }, 300); // CSS transition 시간과 일치
+
+                // 패널 닫힐 때 부가기능 내용 숨기는 로직 삭제
+            });
+        }
+
+        // 부가기능 버튼 클릭 처리 로직 전체 삭제
+
+    </script>
+</body>
+</html>

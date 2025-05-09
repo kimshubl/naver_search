@@ -1,0 +1,151 @@
+{# --- START OF FILE rank_history.html --- #}
+{% extends "base.html" %}
+
+{% block title %}순위 기록: {{ store_name }} - {{ keyword }}{% endblock %}
+
+{% block head_extra %}
+<style>
+    /* ... (기존 CSS 스타일은 그대로 유지) ... */
+    .rank-calendar-table {
+        width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 20px;
+    }
+    .rank-calendar-table th, .rank-calendar-table td {
+        border: 1px solid #dee2e6; text-align: center; height: 130px; /* 높이 약간 더 증가 */
+        vertical-align: top; padding: 0; position: relative; overflow: hidden;
+    }
+    .rank-calendar-table th {
+        background-color: #f8f9fa; padding: 8px 0; font-weight: normal; height: auto;
+    }
+    .rank-calendar-table td .day-content {
+        display: flex; flex-direction: column; height: 100%;
+        padding: 6px; box-sizing: border-box; justify-content: space-between;
+    }
+    .rank-calendar-table .date-number {
+        font-size: 0.8em; color: #6c757d; text-align: left; margin-bottom: 2px; /* 간격 약간 조정 */
+    }
+    .rank-calendar-table .rank-display {
+        flex-grow: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+    }
+    .rank-calendar-table .rank-value {
+        font-size: 1.5em; /* 순위 글꼴 크기 조정 */ font-weight: bold; color: #333; line-height: 1.1;
+    }
+    .rank-calendar-table .rank-value.rank-out {
+        color: #aaa; font-size: 1.2em;
+    }
+    .rank-calendar-table .review-counts, .rank-calendar-table .saved-info { /* saved-info 추가 */
+        font-size: 0.7em; color: #555; margin-top: 3px; line-height: 1.1;
+    }
+    .rank-calendar-table .review-counts span, .rank-calendar-table .saved-info span {
+        margin: 0 3px; /* 간격 약간 조정 */
+    }
+    .rank-calendar-table td.empty { background-color: #f8f9fa; }
+    .rank-calendar-table .rank-value.rank-1 { color: #d9534f; }
+    .rank-calendar-table .rank-value.rank-2 { color: #f0ad4e; }
+    .rank-calendar-table .rank-value.rank-3 { color: #eea236; }
+    .rank-calendar-table .rank-value.rank-4 { color: #5cb85c; }
+    .rank-calendar-table .rank-value.rank-5 { color: #428bca; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>순위 기록</h2>
+    <hr>
+    <h4>가게: {{ store_name }}</h4>
+    <h5>키워드: {{ keyword }}</h5>
+    <h5 class="text-muted mb-3">{{ display_range_str }} (최근 31일)</h5>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message | e }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="my-4">
+        <h4>순위 기록표</h4>
+        <table class="rank-calendar-table">
+            <thead>
+                <tr>
+                    <th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(5) %}
+                <tr>
+                    {% for j in range(7) %}
+                        {% set date_index = i * 7 + j %}
+                        {% if date_index < date_list_31|length %}
+                            {% set current_date_str = date_list_31[date_index] %}
+                            {% set data_for_date = rank_data_map.get(current_date_str) %}
+                            {% set day_num = current_date_str.split('-')[2]|int %}
+                            <td>
+                                <div class="day-content">
+                                    <div class="date-number">{{ day_num }}</div>
+                                    <div class="rank-display">
+                                        {% if data_for_date %}
+                                            {% set rank = data_for_date.rank %}
+                                            {% set visitor_reviews = data_for_date.visitor_reviews %}
+                                            {% set blog_reviews = data_for_date.blog_reviews %}
+                                            {% set saved_count = data_for_date.saved_count %} {# << 저장하기 수 가져오기 #}
+
+                                            {% set rank_class = '' %}
+                                            {% set rank_display_val = '-' %}
+                                            {% if rank is none %}
+                                                {% set rank_class = 'rank-out' %}
+                                            {% elif rank == 'O' %}
+                                                {% set rank_class = 'rank-out' %}
+                                                {% set rank_display_val = 'O' %}
+                                            {% elif rank is number and rank > 0 %}
+                                                {% set rank_display_val = rank ~ '위' %}
+                                                {% if rank == 1 %}{% set rank_class = 'rank-1' %}
+                                                {% elif rank == 2 %}{% set rank_class = 'rank-2' %}
+                                                {% elif rank == 3 %}{% set rank_class = 'rank-3' %}
+                                                {% elif rank == 4 %}{% set rank_class = 'rank-4' %}
+                                                {% elif rank == 5 %}{% set rank_class = 'rank-5' %}
+                                                {% endif %}
+                                            {% endif %}
+
+                                            <div class="rank-value {{ rank_class }}">
+                                                {{ rank_display_val }}
+                                            </div>
+                                            <div class="review-counts">
+                                                <span>방:{{ visitor_reviews if visitor_reviews is not none else '-' }}</span>
+                                                <span>블:{{ blog_reviews if blog_reviews is not none else '-' }}</span>
+                                            </div>
+                                            {# --- 저장하기 수 표시 추가 --- #}
+                                            <div class="saved-info">
+                                                <span>저장: {{ saved_count if saved_count is not none else '-' }}</span>
+                                            </div>
+                                            {# --- 저장하기 수 표시 끝 --- #}
+                                        {% else %}
+                                            <div class="rank-value rank-out">-</div>
+                                            <div class="review-counts">
+                                                <span>방:-</span><span>블:-</span>
+                                            </div>
+                                            <div class="saved-info"> {# 데이터 없을 때도 자리 차지 #}
+                                                <span>저장:-</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        {% else %}
+                            <td class="empty"></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('manage_targets') }}" class="btn btn-secondary mt-3">목록으로 돌아가기</a>
+</div>
+{% endblock %}
+{% block scripts %}{% endblock %}
+{# --- END OF FILE rank_history.html --- #}
