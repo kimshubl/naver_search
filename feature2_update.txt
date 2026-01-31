@@ -1,0 +1,35 @@
+# Feature 2 라우트 업데이트 내용
+
+1. blog_rank_test.py에서 import 수정:
+기존: from blog_rank_test import get_monthly_search_volume
+수정: from blog_rank_test import get_monthly_search_volume, get_keyword_list_with_details
+
+2. feature2_search_volume 라우트 수정:
+
+@app.route('/feature2_search_volume', methods=['GET', 'POST'])
+@login_required
+@subscription_required
+def feature2_search_volume():
+    keyword_list = None
+    error_message = None
+    keyword = None
+
+    if request.method == 'POST':
+        keyword = request.form.get('keyword')
+        if not keyword:
+            error_message = "오류: 검색할 키워드를 입력해주세요."
+        else:
+            try:
+                print(f"Fetching keyword list with details for '{keyword}'...")
+                # 전체 키워드 리스트 가져오기 (연관 키워드 포함)
+                keyword_list = get_keyword_list_with_details(keyword)
+                if keyword_list is None or len(keyword_list) == 0:
+                    error_message = f"'{keyword}'에 대한 검색량 정보를 가져오지 못했거나 해당 키워드가 API 결과에 없습니다."
+            except Exception as e:
+                print(f"Search volume error: {e}")
+                error_message = "오류: 검색량 조회 중 예기치 않은 오류가 발생했습니다."
+
+    return render_template('feature2_search_volume.html',
+                           keyword_list=keyword_list,
+                           error_message=error_message,
+                           keyword=keyword)
